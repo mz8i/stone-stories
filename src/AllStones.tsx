@@ -1,4 +1,3 @@
-import { Physics } from '@react-three/cannon';
 import { Suspense, useEffect } from 'react';
 import { Floor } from './Floor';
 import { ItemState, useItemStore } from './item-store';
@@ -7,7 +6,8 @@ import { getStones } from './firebase';
 
 function useInitStones() {
   const set = useItemStore((store) => store.set);
-
+  //TODO
+  /*
   useEffect(() => {
     if (!set) return;
     async function load() {
@@ -26,6 +26,7 @@ function useInitStones() {
     }
     load();
   }, [set]);
+  */
 }
 
 const NEW_STONE_HEIGHT = 1.2;
@@ -78,19 +79,16 @@ function useInitNewStones() {
   }, [set]);
 }
 
-export function World({ type }) {
+export function AllStones() {
   useInitStones();
   useInitNewStones();
 
   const itemIds = useItemStore((store) => Object.keys(store.items));
   return (
-    <Physics allowSleep>
-      <Floor invisible={type === 'ar'} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} />
-      <Suspense fallback={null}>
-        {itemIds.map((itemId) => (
-          <Stone key={itemId} itemId={itemId} />
-        ))}
-      </Suspense>
-    </Physics>
+    <Suspense fallback={null}>
+      {itemIds.map((itemId) => (
+        <Stone key={itemId} itemId={itemId} />
+      ))}
+    </Suspense>
   );
 }

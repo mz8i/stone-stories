@@ -1,4 +1,4 @@
-import { PublicApi } from '@react-three/cannon';
+import { PhysicsImpostor } from '@babylonjs/core';
 import produce, { setAutoFreeze } from 'immer';
 import createStore, { State as ZustandState, StateCreator } from 'zustand';
 
@@ -21,8 +21,7 @@ export interface PersistentItemState {
   model: string;
 }
 export interface ItemState extends PersistentItemState {
-  // id?: string;
-  api?: PublicApi;
+  api?: PhysicsImpostor;
   levitating?: boolean;
   touched?: boolean;
 }
@@ -31,29 +30,6 @@ export type State = {
   items: Record<string, ItemState>;
   set: (fn: (state: State) => void | State) => void;
 };
-
-/*a: {
-          position: [0, 0.9, -0.3],
-          quaternion: [0, 0, 0, 1],
-          frozen: false,
-          model: 'rock-big'
-        },
-        b: {
-          position: [0, 0.5, -0.5],
-          quaternion: [0, 0, 0, 1],
-          frozen: false,
-          model: 'rock-gray'
-        },c: {
-          position: [0, 1, -0.5],
-          quaternion: [0, 0, 0, 1],
-          frozen: false,
-          model: 'rock-black'
-        },d: {
-          position: [0.2, 2, -0.5],
-          quaternion: [0, 0, 0, 1],
-          frozen: false,
-          model: 'rock-irregular'
-        }*/
 
 export const useItemStore = createStore<State>(
   immer((set, get, api) => {

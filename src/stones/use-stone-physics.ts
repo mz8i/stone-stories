@@ -1,14 +1,14 @@
-import { useBox } from '@react-three/cannon';
 import { useEffect } from 'react';
 import { useItemStore } from '../item-store';
 import { stoneMetadata } from './StoneModel';
 
-export const STONE_MASS = 1;
+export const STONE_MASS = 50;
 
 export function useStonePhysics(itemId) {
   const set = useItemStore((store) => store.set);
   const item = useItemStore((store) => store.items[itemId]);
 
+  /*
   const [ref, api] = useBox(
     () => {
       const options: any = {
@@ -57,4 +57,5 @@ export function useStonePhysics(itemId) {
   }, [api, itemId, set]);
 
   return [ref, api] as const;
+  */
 }

@@ -1160,6 +1160,11 @@
   dependencies:
     postcss-value-parser "^4.2.0"
 
+"@dimforge/rapier3d-compat@0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@dimforge/rapier3d-compat/-/rapier3d-compat-0.9.0.tgz#c1a3c41fa39ae7d8dde22ef628baedf2b8f24dad"
+  integrity sha512-zjgpXS/fFx1lZqjW1DfVUEaRHFpekzWjF6eSGb/xeEUf74YO0NDlQ93Hj0oI2k+i6QIoQk9KcIaEGwQZkullrw==
+
 "@eslint/eslintrc@^1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-1.2.1.tgz#8b5e1c49f4077235516bc9ec7d41378c0f69b8c6"
@@ -1957,6 +1962,14 @@
     use-asset "^1.0.4"
     utility-types "^3.10.0"
     zustand "^3.5.1"
+
+"@react-three/rapier@^0.6.5":
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/@react-three/rapier/-/rapier-0.6.5.tgz#cb69627bf2386babdffcfdf053e6edf0766c1aed"
+  integrity sha512-SOW/kHJpImkqPhyD61tkhcWo2pLTJ1AlJKIvwogIr7RBOBzfFeV7+OHpjWhRXVKRYvWpRPMSbJWO+jYlSoRQZw==
+  dependencies:
+    "@dimforge/rapier3d-compat" "0.9.0"
+    use-asset "^1.0.4"
 
 "@react-three/xr@^3.4.0":
   version "3.4.0"

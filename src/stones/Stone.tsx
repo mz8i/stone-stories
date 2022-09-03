@@ -1,11 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useItemStore } from '../item-store';
 import { stoneMetadata } from './StoneModel';
 import { useStoneUpload } from './stone-upload';
 import { STONE_MASS, useStonePhysics } from './use-stone-physics';
 import { Model, useBeforeRender, useScene } from 'react-babylonjs';
-import { AbstractMesh, Material, PhysicsImpostor, Vector3 } from '@babylonjs/core';
+import { AbstractMesh, Color3, Material, Mesh, PhysicsImpostor, Vector3 } from '@babylonjs/core';
+import { PhysicsDragBehavior } from '../lib/PhysicsDragBehavior';
 
+function useObservable(observable, callback) {
+  useEffect(() => {
+    const observer = observable?.add(callback);
+    return () => {
+      observable?.remove(observer);
+    };
+  });
+}
 export function Stone({ itemId, ...props }) {
   const set = useItemStore((store) => store.set);
   const item = useItemStore((store) => store.items[itemId]);
@@ -14,8 +23,10 @@ export function Stone({ itemId, ...props }) {
   const [isGrabbing, setIsGrabbing] = useState(false);
 
   const [material, setMaterial] = useState<Material>();
-  const impostorRef = useRef<PhysicsImpostor>();
-  const scene = useScene();
+  const [impostor, setImpostor] = useState<PhysicsImpostor>();
+  // const impostorRef = useRef<PhysicsImpostor>();
+  const [model, setModel] = useState<Mesh>();
+  // const scene = useScene();
 
   // TODO add velocity ref and estimate on each frame
 
@@ -57,6 +68,42 @@ export function Stone({ itemId, ...props }) {
   const virtual = !item.touched && item.id.startsWith('_');
   const hasGravity = !(isGrabbing || item.frozen || item.levitating);
 
+  const [dragging, setDragging] = useState(false);
+
+  const [dragBehavior] = useState(() => {
+    const behavior = new PhysicsDragBehavior();
+    behavior.allowMultiPointer = false;
+    return behavior;
+  });
+
+  useEffect(() => {
+    if (!impostor) return;
+    if (!item.frozen) {
+      dragBehavior.attach(model);
+    }
+
+    return () => {
+      dragBehavior.detach();
+    };
+  }, [dragBehavior, item.frozen, model, impostor]);
+
+  const handleDragStart = useCallback(() => {
+    setIsGrabbing(true);
+    set((store) => {
+      store.items[itemId].touched = true;
+      store.items[itemId].levitating = false;
+    });
+  }, [itemId, set]);
+
+  useObservable(dragBehavior?.onDragStartObservable, handleDragStart);
+
+  const handleDragEnd = useCallback(() => {
+    setIsGrabbing(false);
+    impostor?.setMass(hasGravity ? STONE_MASS : 0);
+  }, [impostor, hasGravity]);
+
+  useObservable(dragBehavior?.onDragEndObservable, handleDragEnd);
+
   useLayoutEffect(() => {
     if (material) {
       material.alpha = virtual ? 0.3 : 1;
@@ -65,10 +112,8 @@ export function Stone({ itemId, ...props }) {
   }, [material, virtual]);
 
   useEffect(() => {
-    if (impostorRef.current) {
-      impostorRef.current.setMass(hasGravity ? STONE_MASS : 0);
-    }
-  }, [impostorRef, hasGravity]);
+    impostor?.setMass(hasGravity ? STONE_MASS : 0);
+  }, [impostor, hasGravity]);
 
   const [modelLoaded, setModelLoaded] = useState(false);
   const metadata = stoneMetadata[item.model];
@@ -81,9 +126,10 @@ export function Stone({ itemId, ...props }) {
       position={new Vector3(...item.position)}
       rotation={new Vector3(...item.rotation)}
       onModelLoaded={(model) => {
-        const mesh = model.meshes[1];
-        setMaterial(mesh.material);
+        const stoneMesh = model.meshes[1];
+        setMaterial(stoneMesh.material);
         setModelLoaded(true);
+        setModel(model.rootMesh as Mesh);
         // mesh.setParent(null);
 
         // impostorRef.current = new PhysicsImpostor(
@@ -101,30 +147,31 @@ export function Stone({ itemId, ...props }) {
     >
       {modelLoaded && (
         <physicsImpostor
-          ref={impostorRef}
-          type={PhysicsImpostor.MeshImpostor}
+          ref={setImpostor}
+          type={PhysicsImpostor.ConvexHullImpostor}
           _options={{
             mass: hasGravity ? STONE_MASS : 0,
             restitution: 0,
             friction: 1000,
+            disableBidirectionalTransformation: true,
           }}
         />
       )}
-      {!item.frozen && (
-        <sixDofDragBehavior
-          onDragStartObservable={() => {
-            setIsGrabbing(true);
-            set((store) => {
-              store.items[itemId].touched = true;
-              store.items[itemId].levitating = false;
-            });
-          }}
-          onDragEndObservable={() => {
-            setIsGrabbing(false);
-            impostorRef.current?.setMass(hasGravity ? STONE_MASS : 0);
-          }}
-        />
-      )}
+      {/* {isGrabbing && (
+        <sphere name="pointer-sphere" diameter={0.5}>
+          <standardMaterial name="pointer-sphere-material" diffuseColor={Color3.Red()} />
+          <physicsImpostor
+            type={PhysicsImpostor.NoImpostor}
+            _options={{
+              mass: 0,
+            }}
+          />
+        </sphere>
+      )} */}
+      {/* <sixDofDragBehavior
+        onDragStartObservable={handleDragStart}
+        onDragEndObservable={handleDragEnd}
+      /> */}
     </Model>
   );
 }

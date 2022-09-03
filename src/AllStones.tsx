@@ -42,7 +42,7 @@ function useInitNewStones() {
         model: 'rock-irregular',
         position: [-0.5, NEW_STONE_HEIGHT, -1],
         rotation: [0, 0, 0],
-        levitating: true,
+        levitating: false,
         frozen: false,
       },
       {
@@ -50,7 +50,7 @@ function useInitNewStones() {
         model: 'rock-big',
         position: [-1, NEW_STONE_HEIGHT, -1],
         rotation: [0, 0, 0],
-        levitating: true,
+        levitating: false,
         frozen: false,
       },
       {
@@ -58,7 +58,7 @@ function useInitNewStones() {
         model: 'rock-gray',
         position: [0.2, NEW_STONE_HEIGHT, -1],
         rotation: [0, 0, 0],
-        levitating: true,
+        levitating: false,
         frozen: false,
       },
       {
@@ -66,7 +66,7 @@ function useInitNewStones() {
         model: 'rock-black',
         position: [1, NEW_STONE_HEIGHT, -1],
         rotation: [0, 0, 0],
-        levitating: true,
+        levitating: false,
         frozen: false,
       },
     ];

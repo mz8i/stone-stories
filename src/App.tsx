@@ -15,18 +15,11 @@ import { AllStones } from './AllStones';
 import { Ammo } from './lib/Ammo';
 
 import './App.css';
-import * as CANNON from 'cannon-es';
-import {
-  AmmoJSPlugin,
-  CannonJSPlugin,
-  Vector3,
-  Scene as BabylonJSCoreScene,
-} from '@babylonjs/core';
+import { AmmoJSPlugin, Vector3, Scene as BabylonJSCoreScene } from '@babylonjs/core';
 import { Floor } from './Floor';
 import '@babylonjs/loaders/glTF';
 
-const physicsPlugin = new CannonJSPlugin(true, 10, CANNON);
-// const physicsPlugin = new AmmoJSPlugin(true, Ammo);
+const physicsPlugin = new AmmoJSPlugin(true, Ammo);
 
 const configurations = [
   {

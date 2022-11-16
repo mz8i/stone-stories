@@ -1,4 +1,16 @@
-import { AbstractMesh, BaseSixDofDragBehavior, Mesh, Quaternion, Vector3 } from '@babylonjs/core';
+import {
+  AbstractMesh,
+  BaseSixDofDragBehavior,
+  Mesh,
+  PhysicsImpostor,
+  PhysicsJoint,
+  Quaternion,
+  Vector3,
+  TransformNode,
+  MeshBuilder,
+  DistanceJointData,
+  Observable,
+} from '@babylonjs/core';
 
 import { Ammo } from './Ammo';
 
@@ -25,23 +37,30 @@ function printTransform(t) {
 }
 
 export class PhysicsDragBehavior extends BaseSixDofDragBehavior {
-  protected _physicsWorld;
+  // protected _physicsWorld;
 
-  protected _pointerBody;
-  protected _objectBody;
-  protected _pointerConstraint;
+  // protected _pointerBody;
+  protected _pointerNode: Mesh;
+  protected _pointerImpostor: PhysicsImpostor;
+  // protected _objectBody;
+  protected _objectImpostor: PhysicsImpostor;
+  // protected _pointerConstraint;
+  protected _pointerJoint: PhysicsJoint;
 
   protected _startPosition;
   protected _startRotation;
+
+  public onBeforeDragStartObservable = new Observable<{ position: Vector3 }>();
 
   attach(ownerNode: AbstractMesh): void {
     super.attach(ownerNode);
 
     ownerNode.isNearGrabbable = true;
 
-    this._objectBody = ownerNode.physicsImpostor.physicsBody;
+    // this._objectBody = ownerNode.physicsImpostor.physicsBody;
+    this._objectImpostor = ownerNode.physicsImpostor;
 
-    this._physicsWorld = this._scene._physicsEngine.getPhysicsPlugin().world;
+    // this._physicsWorld = this._scene._physicsEngine.getPhysicsPlugin().world;
   }
 
   public detach(): void {
@@ -49,10 +68,11 @@ export class PhysicsDragBehavior extends BaseSixDofDragBehavior {
 
     if (this._ownerNode) {
       (this._ownerNode as Mesh).isNearGrabbable = false;
-      this._objectBody = null;
+      // this._objectBody = null;
     }
 
-    this._physicsWorld = null;
+    this._objectImpostor = null;
+    // this._physicsWorld = null;
   }
 
   /*
@@ -76,9 +96,11 @@ export class PhysicsDragBehavior extends BaseSixDofDragBehavior {
     worldRotation: Quaternion,
     pointerId: number,
   ): void {
+    this.onBeforeDragStartObservable.notifyObservers({ position: worldPosition });
     this._startPosition = worldPosition;
     this._startRotation = worldRotation;
 
+    /*
     getAmmoTransformFromBabylon(worldPosition, worldRotation, tmpTransform);
     let motionState = new Ammo.btDefaultMotionState(tmpTransform);
 
@@ -92,25 +114,47 @@ export class PhysicsDragBehavior extends BaseSixDofDragBehavior {
 
     // set collision mask to 0 to collide with nothing
     this._physicsWorld.addRigidBody(this._pointerBody, 1, 0);
+    */
 
-    this._objectBody.setCollisionFlags(0);
-    this._objectBody.forceActivationState(4);
-    this._objectBody.activate();
+    this._pointerNode = MeshBuilder.CreateSphere('pointer-sphere', { diameter: 0.2 });
+    this._pointerNode.position.copyFrom(worldPosition);
+    this._pointerNode.rotationQuaternion = new Quaternion();
+    this._pointerNode.rotationQuaternion.copyFrom(worldRotation);
+    // this._pointerNode.visibility = 0;
 
-    const transformA = new Ammo.btTransform();
-    transformA.setIdentity();
-    const transformB = new Ammo.btTransform();
-    transformB.setIdentity();
-    const constraint = (this._pointerConstraint = new Ammo.btGeneric6DofConstraint(
-      this._pointerBody,
-      this._objectBody,
-      transformA,
-      transformB,
-      false,
-    ));
-    // constraint.set;
+    this._pointerImpostor = new PhysicsImpostor(this._pointerNode, PhysicsImpostor.NoImpostor, {
+      mass: 0,
+    });
 
-    this._physicsWorld.addConstraint(this._pointerConstraint, true);
+    this._objectImpostor.wakeUp();
+
+    this._objectImpostor.setAngularVelocity(new Vector3(0, 0, 0));
+    this._objectImpostor.setLinearVelocity(new Vector3(0, 0, 0));
+
+    // this._objectImpostor.forceUpdate()
+    // this._objectBody.setCollisionFlags(0);
+    // this._objectBody.forceActivationState(4);
+    // this._objectBody.activate();
+
+    // const transformA = new Ammo.btTransform();
+    // transformA.setIdentity();
+    // const transformB = new Ammo.btTransform();
+    // transformB.setIdentity();
+    // const constraint = (this._pointerConstraint = new Ammo.btGeneric6DofConstraint(
+    //   this._pointerBody,
+    //   this._objectBody,
+    //   transformA,
+    //   transformB,
+    //   false,
+    // ));
+
+    // this._physicsWorld.addConstraint(this._pointerConstraint, true);
+
+    this._pointerImpostor.createJoint(this._objectImpostor, PhysicsJoint.DistanceJoint, {
+      collision: false,
+      maxDistance: 1,
+    } as DistanceJointData);
+    // this._scene.getPhysicsEngine().addJoint(this._objectImpostor, this._pointerImpostor, joint);
   }
 
   protected _targetDrag(
@@ -118,27 +162,40 @@ export class PhysicsDragBehavior extends BaseSixDofDragBehavior {
     worldDeltaRotation: Quaternion,
     pointerId: number,
   ): void {
-    const ms = this._pointerBody.getMotionState();
-    if (ms) {
-      worldDeltaPosition.addToRef(this._startPosition, tmpBabylonVec3);
-      worldDeltaRotation.multiplyToRef(this._startRotation, tmpBabylonQuat);
+    // const ms = this._pointerBody.getMotionState();
+    // if (ms) {
+    //   worldDeltaPosition.addToRef(this._startPosition, tmpBabylonVec3);
+    //   worldDeltaRotation.multiplyToRef(this._startRotation, tmpBabylonQuat);
 
-      printTransform(
-        this._objectBody.getMotionState().getWorldTransform() ??
-          this._objectBody.getWorldTransform(),
-      );
+    //   printTransform(
+    //     this._objectBody.getMotionState().getWorldTransform() ??
+    //       this._objectBody.getWorldTransform(),
+    //   );
 
-      const t = new Ammo.btTransform();
-      getAmmoTransformFromBabylon(tmpBabylonVec3, tmpBabylonQuat, t);
-      this._pointerBody.setWorldTransform(t);
-      ms.setWorldTransform(t);
-    }
+    //   const t = new Ammo.btTransform();
+    //   getAmmoTransformFromBabylon(tmpBabylonVec3, tmpBabylonQuat, t);
+    //   this._pointerBody.setWorldTransform(t);
+    //   ms.setWorldTransform(t);
+    // }
+    const parent = this._pointerNode.parent;
+    this._pointerNode.setParent(null);
+    // this._pointerNode.position.copyFrom(worldDeltaPosition);
+    // this._pointerNode.rotationQuaternion.copyFrom(worldDeltaRotation);
+    this._startPosition.addToRef(worldDeltaPosition, this._pointerNode.position);
+    this._startRotation.multiplyToRef(worldDeltaRotation, this._pointerNode.rotationQuaternion);
+    this._pointerNode.setParent(parent);
   }
 
   protected _targetDragEnd(pointerId: number): void {
-    this._physicsWorld.removeConstraint(this._pointerConstraint);
-    this._physicsWorld.removeRigidBody(this._pointerBody);
-    this._pointerBody = null;
+    this._pointerImpostor.dispose();
+    this._pointerNode.dispose();
+
+    this._pointerNode = null;
+    this._pointerImpostor = null;
+
+    // this._physicsWorld.removeConstraint(this._pointerConstraint);
+    // this._physicsWorld.removeRigidBody(this._pointerBody);
+    // this._pointerBody = null;
 
     this._startPosition = null;
     this._startRotation = null;

@@ -13,7 +13,7 @@ function useObservable(observable, callback) {
     return () => {
       observable?.remove(observer);
     };
-  });
+  }, [observable, callback]);
 }
 export function Stone({ itemId, ...props }) {
   const set = useItemStore((store) => store.set);
@@ -66,9 +66,7 @@ export function Stone({ itemId, ...props }) {
   // useStoneUpload(item, api, set);
 
   const virtual = !item.touched && item.id.startsWith('_');
-  const hasGravity = !(isGrabbing || item.frozen || item.levitating);
-
-  const [dragging, setDragging] = useState(false);
+  const hasGravity = !(item.frozen || item.levitating);
 
   const [dragBehavior] = useState(() => {
     const behavior = new PhysicsDragBehavior();
@@ -87,6 +85,12 @@ export function Stone({ itemId, ...props }) {
     };
   }, [dragBehavior, item.frozen, model, impostor]);
 
+  const handleBeforeDragStart = useCallback(() => {
+    impostor?.setMass(STONE_MASS);
+  }, [impostor]);
+
+  useObservable(dragBehavior?.onBeforeDragStartObservable, handleBeforeDragStart);
+
   const handleDragStart = useCallback(() => {
     setIsGrabbing(true);
     set((store) => {
@@ -99,8 +103,8 @@ export function Stone({ itemId, ...props }) {
 
   const handleDragEnd = useCallback(() => {
     setIsGrabbing(false);
-    impostor?.setMass(hasGravity ? STONE_MASS : 0);
-  }, [impostor, hasGravity]);
+    // impostor?.setMass(STONE_MASS);
+  }, []);
 
   useObservable(dragBehavior?.onDragEndObservable, handleDragEnd);
 
@@ -111,9 +115,9 @@ export function Stone({ itemId, ...props }) {
     }
   }, [material, virtual]);
 
-  useEffect(() => {
-    impostor?.setMass(hasGravity ? STONE_MASS : 0);
-  }, [impostor, hasGravity]);
+  // useEffect(() => {
+
+  // }, [impostor, hasGravity]);
 
   const [modelLoaded, setModelLoaded] = useState(false);
   const metadata = stoneMetadata[item.model];
@@ -153,7 +157,7 @@ export function Stone({ itemId, ...props }) {
             mass: hasGravity ? STONE_MASS : 0,
             restitution: 0,
             friction: 1000,
-            disableBidirectionalTransformation: true,
+            // disableBidirectionalTransformation: true,
           }}
         />
       )}

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useItemStore } from '../item-store';
-import { Grab } from '../lib/react-xr-default-hands/Grab';
 import { StoneModel } from './StoneModel';
 import { useStoneUpload } from './stone-upload';
 import { STONE_MASS } from './use-stone-physics';
 import { MeshCollider, RigidBody } from '@react-three/rapier';
-import { RayGrab } from '@react-three/xr';
 
 export function Stone({ itemId, ...props }) {
   const set = useItemStore((store) => store.set);
@@ -47,16 +45,31 @@ export function Stone({ itemId, ...props }) {
 
   const model = <StoneModel type={item.model} virtual={!item.touched && item.id.startsWith('_')} />;
 
-  const rigidBody = (
-    <RigidBody
-      type={item.frozen || item.levitating ? 'fixed' : isGrabbing ? 'kinematicPosition' : 'dynamic'}
-      colliders="hull"
+  const type =
+    item.frozen || item.levitating ? 'fixed' : isGrabbing ? 'kinematicPosition' : 'dynamic';
+  console.log(`Item ${itemId} body type: ${type}`);
+
+  return (
+    <group
       position={item.position}
       rotation={item.rotation}
+      onDoubleClick={(e) => {
+        console.log('dbl click');
+        set((store) => {
+          store.items[itemId].levitating = false;
+          store.items[itemId].frozen = false;
+        });
+      }}
     >
-      {model}
-    </RigidBody>
+      <RigidBody
+        type={type}
+        colliders="hull"
+        // position={item.position}
+        // rotation={item.rotation}
+        mass={STONE_MASS}
+      >
+        {model}
+      </RigidBody>
+    </group>
   );
-
-  return item.frozen ? rigidBody : <RayGrab>{rigidBody}</RayGrab>;
 }

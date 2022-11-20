@@ -1,4 +1,4 @@
-import { Physics } from '@react-three/cannon';
+import { Physics } from '@react-three/rapier';
 import { Suspense, useEffect } from 'react';
 import { Floor } from './Floor';
 import { ItemState, useItemStore } from './item-store';
@@ -84,8 +84,8 @@ export function World({ type }) {
 
   const itemIds = useItemStore((store) => Object.keys(store.items));
   return (
-    <Physics allowSleep>
-      <Floor invisible={type === 'ar'} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} />
+    <Physics colliders="hull">
+      <Floor invisible={type === 'ar'} position={[0, 0, 0]} />
       <Suspense fallback={null}>
         {itemIds.map((itemId) => (
           <Stone key={itemId} itemId={itemId} />

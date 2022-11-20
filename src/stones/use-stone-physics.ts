@@ -1,4 +1,3 @@
-import { useBox } from '@react-three/cannon';
 import { useEffect } from 'react';
 import { useItemStore } from '../item-store';
 import { stoneMetadata } from './StoneModel';

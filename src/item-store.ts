@@ -1,4 +1,3 @@
-import { PublicApi } from '@react-three/cannon';
 import produce, { setAutoFreeze } from 'immer';
 import createStore, { State as ZustandState, StateCreator } from 'zustand';
 
@@ -22,7 +21,6 @@ export interface PersistentItemState {
 }
 export interface ItemState extends PersistentItemState {
   // id?: string;
-  api?: PublicApi;
   levitating?: boolean;
   touched?: boolean;
 }
